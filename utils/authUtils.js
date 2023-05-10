@@ -13,6 +13,7 @@ const generateToken = (username, email) => {
 }
 async function verifyToken(req, ACCESS_TOKEN_SECRET) {
     let token;
+
     if (checkAuthHeader(req)) {
         try {
             token = req.headers.authorization.split(' ')[1];

@@ -1,5 +1,5 @@
 
-const { ACCESS_TOKEN_SECRET } = process.env;
+// const { ACCESS_TOKEN_SECRET } = process.env;
 const { getTokenRepo, getUserFromEmail } = require("../repositories/user");
 const { verfiyTokenDate, checkAuthHeader, verifyToken } = require("../utils/authUtils");
 
@@ -12,27 +12,27 @@ class AuthMiddleware {
     appPassword;
     pool;
     constructor(accessTokenSecret, email, appPassword, pool) {
-        console.log(process.env.ACCESS_TOKEN_SECRET)
+
 
         this.accessTokenSecret = accessTokenSecret;
         this.email = email;
         this.appPassword = appPassword;
         this.pool = pool;
 
+
     }
 
-
-
-
-
-
     async authorizedUser(req, res, next) {
-        const { token, decoded } = await verifyToken(req, process.env.ACCESS_TOKEN_SECRET);
+
+        const { token, decoded } = await verifyToken(req, res.locals.accessTokenSecret);
         if (checkAuthHeader(req)) {
 
             try {
+                let decoded_email = decoded.email;
 
-                const users = await getUserFromEmail(decoded.email);
+                let pool = res.locals.db_pool;
+                const users = await getUserFromEmail({ "email": decoded_email, pool });
+
                 if (!users.rows.length) {
                     res.status(401)
                     throw new Error('Invalid Token')
@@ -61,11 +61,12 @@ class AuthMiddleware {
 
     async authorizedUserdb(req, res, next) {
 
-        const { token, decoded } = await verifyToken(req, process.env.ACCESS_TOKEN_SECRET);
+        const { token, decoded } = await verifyToken(req, res.locals.accessTokenSecret);
         if (checkAuthHeader(req)) {
             try {
-
-                let dbToken = await getTokenRepo(decoded.username);
+                let username = decoded.username;
+                let pool = res.locals.db_pool;
+                let dbToken = await getTokenRepo({ username, pool });
 
                 if (token !== dbToken.rows[0].token) {
 

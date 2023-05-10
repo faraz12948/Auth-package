@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-
+const pool_p = require("../config/dbConfig");
 
 const loginRepo = async (data) => {
     const {
@@ -30,7 +30,9 @@ const getTokenRepo = async (data) => {
 }
 const getUserFromEmail = async (data) => {
     const query = `SELECT username,email FROM users WHERE email='${data.email}'`
-    return await data.pool.query(query)
+    let res = await data.pool.query(query)
+
+    return res;
 }
 const getUserFromUsername = async (data) => {
     const query = `SELECT username,email FROM users WHERE username='${data}'`

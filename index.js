@@ -1,11 +1,23 @@
 const express = require('express')
 const { login, register } = require('./controllers/user');
 const router = express.Router();
-const pool_p = require('./config/dbConfig')
 const AuthMiddleware = require('./middlewares/auth');
 const dotenv = require('dotenv');
+const pool_p = require('./config/dbConfig')
+
+
 function Auth(pool, accessTokenSecret, email, appPassword) {
     const app = express();
+
+    // Define middleware to add a variable to every request
+    app.use(function (req, res, next) {
+        res.locals.db_pool = pool;
+        res.locals.accessTokenSecret = accessTokenSecret;
+        res.locals.service_email = email;
+        res.locals.appPassword = appPassword;
+        next();
+    });
+
 
     const cors = require('cors');
     const cookieParser = require('cookie-parser');
@@ -18,14 +30,14 @@ function Auth(pool, accessTokenSecret, email, appPassword) {
     app.use(router);
 
 
-    process.env.ACCESS_TOKEN_SECRET = accessTokenSecret;
-    process.env.USER = email;
-    process.env.PASSWORD = appPassword;
+   
 
-    const AuthMiddlewareObject = new AuthMiddleware(accessTokenSecret, email, appPassword, pool);
+
+    const AuthMiddlewareObject = new AuthMiddleware(accessTokenSecret, email, appPassword, pool_p);
 
     router.get('/auth-t1', async function (req, res) {
         try {
+
             const data = await pool.query('SELECT * FROM users');
             res.status(200).json({
                 "message": "OK",
