@@ -1,5 +1,4 @@
 const bcrypt = require("bcrypt");
-const pool_p = require("../config/dbConfig");
 
 const loginRepo = async (data) => {
     const {

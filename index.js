@@ -1,4 +1,5 @@
 const express = require('express')
+const globalVars = require('./globalVars');
 const { login, register } = require('./controllers/user');
 const router = express.Router();
 const AuthMiddleware = require('./middlewares/auth');
@@ -10,13 +11,19 @@ function Auth(pool, accessTokenSecret, email, appPassword) {
     const app = express();
 
     // Define middleware to add a variable to every request
-    app.use(function (req, res, next) {
-        res.locals.db_pool = pool;
-        res.locals.accessTokenSecret = accessTokenSecret;
-        res.locals.service_email = email;
-        res.locals.appPassword = appPassword;
-        next();
-    });
+    // app.use(function (req, res, next) {
+    //     res.locals.db_pool = pool;
+    //     res.locals.accessTokenSecret = accessTokenSecret;
+    //     res.locals.service_email = email;
+    //     res.locals.appPassword = appPassword;
+    //     next();
+    // });
+
+    // setting the global values
+    globalVars.setPool(pool);
+    globalVars.setAccessTokenSecret(accessTokenSecret);
+    globalVars.setEmail(email);
+    globalVars.setAppPassword(appPassword);
 
 
     const cors = require('cors');
@@ -30,10 +37,10 @@ function Auth(pool, accessTokenSecret, email, appPassword) {
     app.use(router);
 
 
-   
 
 
-    const AuthMiddlewareObject = new AuthMiddleware(accessTokenSecret, email, appPassword, pool_p);
+
+    const AuthMiddlewareObject = new AuthMiddleware();
 
     router.get('/auth-t1', async function (req, res) {
         try {
@@ -49,12 +56,12 @@ function Auth(pool, accessTokenSecret, email, appPassword) {
     })
     router.post('/auth-t1/login', async (req, res) => {
 
-        await login(req, res, pool)
+        await login(req, res)
 
     })
     router.post('/auth-t1/signin', async (req, res) => {
 
-        await register(req, res, pool)
+        await register(req, res)
 
     })
 
@@ -65,18 +72,15 @@ function Auth(pool, accessTokenSecret, email, appPassword) {
     })
 
 
-    app.listen(5000, () => {
-        console.log(`Example app listening on port ${5000}`)
-    })
+
 
     return {
-        "app": app,
+        "authApp": app,
         "AuthMiddleware": AuthMiddlewareObject
     };
 
 
 
 }
-Auth(pool_p, "ffffff", "faraz.ahmed7397@gmail.com", "cscsdnsdvsdvk");
 
 module.exports = Auth;

@@ -1,11 +1,12 @@
+const globalVars = require('../globalVars');
 const { getTokenRepo, updateTokenRepo } = require("../repositories/user");
 const { loginUser, getUserByEmail, getUserByUsername, registerUser } = require("../services/user");
 const { verfiyTokenDate, generateToken } = require("../utils/authUtils");
 const bcrypt = require("bcrypt");
 
-const login = async (req, res, pool) => {
+const login = async (req, res) => {
     const { username, password } = req.body
-    const users = await loginUser(username, password, pool);
+    const users = await loginUser(username, password, globalVars.getPool());
 
     if (users.rows.length === 0) {
 
@@ -17,6 +18,7 @@ const login = async (req, res, pool) => {
     let user = users.rows[0];
     if (await bcrypt.compare(password, user.password)) {
         let tkn = null;
+        let pool = globalVars.getPool();
         let dbToken = await getTokenRepo({ username, pool });
 
         if (!verfiyTokenDate(dbToken.rows[0].token)) {
@@ -46,15 +48,15 @@ const login = async (req, res, pool) => {
 
 }
 
-const register = async (req, res, pool) => {
+const register = async (req, res) => {
     const {
         username,
         email,
         password,
         isAdmin
     } = req.body
-    // let isAdmin = false;
 
+    let pool = globalVars.getPool();
     let user = await getUserByEmail(email, pool);
     let uname = await getUserByUsername(username, pool);
     if (user.rows.length !== 0) {

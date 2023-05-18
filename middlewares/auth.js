@@ -1,5 +1,5 @@
 
-// const { ACCESS_TOKEN_SECRET } = process.env;
+const globalVars = require('../globalVars');
 const { getTokenRepo, getUserFromEmail } = require("../repositories/user");
 const { verfiyTokenDate, checkAuthHeader, verifyToken } = require("../utils/authUtils");
 
@@ -7,30 +7,22 @@ const { verfiyTokenDate, checkAuthHeader, verifyToken } = require("../utils/auth
 class AuthMiddleware {
 
 
-    accessTokenSecret;
-    email;
-    appPassword;
-    pool;
-    constructor(accessTokenSecret, email, appPassword, pool) {
 
+    constructor() {
 
-        this.accessTokenSecret = accessTokenSecret;
-        this.email = email;
-        this.appPassword = appPassword;
-        this.pool = pool;
-
+        this.createUserTable();
 
     }
 
     async authorizedUser(req, res, next) {
 
-        const { token, decoded } = await verifyToken(req, res.locals.accessTokenSecret);
+        const { token, decoded } = await verifyToken(req, globalVars.getAccessTokenSecret());
         if (checkAuthHeader(req)) {
 
             try {
                 let decoded_email = decoded.email;
 
-                let pool = res.locals.db_pool;
+                let pool = globalVars.getPool();
                 const users = await getUserFromEmail({ "email": decoded_email, pool });
 
                 if (!users.rows.length) {
@@ -61,11 +53,11 @@ class AuthMiddleware {
 
     async authorizedUserdb(req, res, next) {
 
-        const { token, decoded } = await verifyToken(req, res.locals.accessTokenSecret);
+        const { token, decoded } = await verifyToken(req, globalVars.getAccessTokenSecret());
         if (checkAuthHeader(req)) {
             try {
                 let username = decoded.username;
-                let pool = res.locals.db_pool;
+                let pool = globalVars.getPool();
                 let dbToken = await getTokenRepo({ username, pool });
 
                 if (token !== dbToken.rows[0].token) {
@@ -89,6 +81,7 @@ class AuthMiddleware {
     }
     async createUserTable() {
         try {
+            let pool = globalVars.getPool();
             const client = await pool.connect();
             await client.query(`
           CREATE TABLE IF NOT EXISTS users (

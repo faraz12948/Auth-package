@@ -1,8 +1,8 @@
 const jwt = require('jsonwebtoken');
 const { getUserFromEmail } = require('../repositories/user');
 
-const { ACCESS_TOKEN_SECRET } = process.env;
 const generateToken = (username, email) => {
+
     let data = {
         username,
         email
@@ -11,13 +11,13 @@ const generateToken = (username, email) => {
         expiresIn: '60d'
     })
 }
-async function verifyToken(req, ACCESS_TOKEN_SECRET) {
+async function verifyToken(req, accessTokenSecret) {
     let token;
 
     if (checkAuthHeader(req)) {
         try {
             token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+            const decoded = jwt.verify(token, accessTokenSecret);
             return { token, decoded };
         } catch (e) {
             console.error(e);
@@ -44,10 +44,10 @@ function checkAuthHeader(req) {
     }
     return false;
 }
-async function verifyJwtuser(req, ACCESS_TOKEN_SECRET) {
+async function verifyJwtuser(req, accessTokenSecret) {
 
     const token = req.headers.authorization.split(' ')[1]
-    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET)
+    const decoded = jwt.verify(token, accessTokenSecret)
 
     const users = await getUserFromEmail(decoded.email);
     if (users.rows.length) {
